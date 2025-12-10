@@ -29,9 +29,46 @@ Créer un fichier
 touch nomDuFichier
 ```
 
+Supprimer un ficher 
+```bash
+rm nomDuFichier
+```
+
 Créer un nouveau dossier 
 ```bash
 mkdir nomDuDossier
+```
+
+Supprimer un dossier 
+```bash
+rmdir nomDuDossier
+```
+
+```bash
+rm -Rf nomDuDossier
+```
+
+Déplacer un fichier ou un dossier
+```bash
+mv ./origine nouvelle/emplacement/
+```
+Cette commande va déplacer le fichier origine (dans le dossier courant)
+dans le dossier ./nouvel/emplacement/origine
+
+Renomer un dossier ou fichier
+```bash
+mv ancienNom nouveauNom
+```
+
+Copier un fichier
+```bash
+cp origine copie
+```
+crée un nouveau fichier nommé copie avec le même contenu que origine
+
+Copier un dossier
+```bash
+cp -R origine/ nouveauDossier/
 ```
 
 ### Redirection des sorties

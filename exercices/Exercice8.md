@@ -20,6 +20,7 @@ sudo visudo
 alice   ALL=(ALL:ALL) ALL
 bob     ALL=(root) /bin/systemctl restart apache2
 ```
+
 3) Exercice 3 — NOPASSWD
 ```shell
 sudo visudo

@@ -265,6 +265,303 @@ sudo journalctl -t sudo
 
 ## Firewall
 
+Un parfeu va permettre de filtrer le trafic réseau entrant en définissant des règles pour dire ce qui peut passer ou pas.
+
+Sur linux il y a 4 parefeu qu'on peut utliser : 
+- iptables : le parefeu historique de linux
+- nftables : le nouveau parefeu officiel de linux
+- ufw : Un surcouche à iptables ou nftables pour les systèmes basé Debian (simplifie l'utilisation)
+- firewalld : Même chose que ufw mais pour les système basé redhats
+
+#### 1. Ufw
+
+1) Voir le status
+```shell
+sudo ufw status verbose
+```
+```terminaloutput
+Status: active
+Logging: on (low)
+Default: deny (incoming), allow (outgoing), disabled (routed)
+New profiles: skip
+
+To                         Action      From
+--                         ------      ----
+80/tcp (WWW)               ALLOW IN    Anywhere                  
+22/tcp                     ALLOW IN    Anywhere                  
+22                         ALLOW IN    Anywhere                  
+80,443/tcp (WWW Full)      ALLOW IN    Anywhere                  
+80/tcp (WWW (v6))          ALLOW IN    Anywhere (v6)             
+22/tcp (v6)                ALLOW IN    Anywhere (v6)             
+22 (v6)                    ALLOW IN    Anywhere (v6)             
+80,443/tcp (WWW Full (v6)) ALLOW IN    Anywhere (v6)
+```
+
+Ici on a deux fois les règles car on a une règle pour IPv4 et la même règle pour IPv6
+
+2) Pour activer ufw
+```shell
+sudo ufw enable
+```
+
+3) Pour le désactiver
+```shell
+sudo ufw disable
+```
+
+4) Créer une nouvelle règle
+```shell
+sudo ufw allow ssh
+```
+ou
+```shell
+sudo ufw allow 22/tcp
+```
+Ici j'authorise le trafic ssh (port 22)
+
+Pareil pour http :
+```shell
+sudo ufw allow http
+```
+ou 
+```shell
+sudo ufw allow 80
+```
+
+5) Bloquer un port
+```shell
+sudo ufw deny 3306
+```
+Ne pas authorisé les connection sur le port 3306 (mysql)
+
+7) supprimer une règle :
+```shell
+sudo ufw delete allow 22
+```
+je supprime l'authorisation de se connecter en ssh
+
+8) Limiter la connexion (anti-bruteforce)
+```shell
+sudo ufw limit ssh
+```
+
+#### Firewalld
+
+1) Voir le status
+```shell
+sudo firewall-cmd --state
+```
+
+```shell
+sudo firewall-cmd --get-active-zones
+sudo firewall-cmd --list-all
+```
+
+Ici on a deux fois les règles car on a une règle pour IPv4 et la même règle pour IPv6
+
+2) Pour activer ufw
+```shell
+sudo systemctl enable firewalld
+sudo systemctl start firewalld
+```
+
+3) Pour le désactiver
+```shell
+sudo systemctl stop firewalld
+sudo systemctl disable firewalld
+```
+
+4) Créer une nouvelle règle
+```shell
+sudo firewall-cmd --permanent --add-port=22/tcp
+sudo firewall-cmd --reload
+```
+Ici j'authorise le trafic ssh (port 22)
+
+5) Bloquer un port
+```shell
+sudo firewall-cmd --permanent --remove-port=3306/tcp
+sudo firewall-cmd --reload
+```
+Ne pas authorisé les connection sur le port 3306 (mysql)
+
+#### IPTables
+
+1) voir les règles
+```shell
+sudo iptables -L -v -n
+```
+
+2) Bloquer tout le trafic entrant
+```shell
+sudo iptables -P INPUT DROP
+```
+
+3) Authorisé un port
+```shell
+sudo ipables -A INPUT -p tcp --dport 22 -j ACCEPT
+```
+
+4) Sauver les règles (ipv4)
+```shell
+sudo iptables-save > /etc/iptables/rules.v4
+```
+
+####  nftables
+
+1) lister les règles
+```shell
+sudo nft list ruleset
+```
+
+2) Ajouter une règle
+```shell
+sudo nft add rule inet filter input tcp dport 22 accept
+```
+
+3) bloquer tout le reste
+```shell
+sudo nft add rule inet filter input drop
+```
+
 ## SSH
+
+SSH est un protocol de connexion à distance sur un serveur (Linux et Windows)
+
+C'est un protocol qui fonctionne avec la ligne de commande
+
+1) Installation
+```shell
+sudo apt install ssh
+```
+
+2) Vérifier qu'il tourne
+```shell
+systemctl status ssh
+```
+
+3) Configurer ssh
+```shell
+cat /etc/ssh/ssh_config
+```
+```terminaloutput
+# This is the ssh client system-wide configuration file.  See
+# ssh_config(5) for more information.  This file provides defaults for
+# users, and the values can be changed in per-user configuration files
+# or on the command line.
+
+# Configuration data is parsed as follows:
+#  1. command line options
+#  2. user-specific file
+#  3. system-wide file
+# Any configuration value is only changed the first time it is set.
+# Thus, host-specific definitions should be at the beginning of the
+# configuration file, and defaults at the end.
+
+# Site-wide defaults for some commonly used options.  For a comprehensive
+# list of available options, their meanings and defaults, please see the
+# ssh_config(5) man page.
+
+Include /etc/ssh/ssh_config.d/*.conf
+
+Host *
+#   ForwardAgent no
+#   ForwardX11 no
+#   ForwardX11Trusted yes
+#   PasswordAuthentication yes
+#   HostbasedAuthentication no
+#   GSSAPIAuthentication no
+#   GSSAPIDelegateCredentials no
+#   GSSAPIKeyExchange no
+#   GSSAPITrustDNS no
+#   BatchMode no
+#   CheckHostIP yes
+#   AddressFamily any
+#   ConnectTimeout 0
+#   StrictHostKeyChecking ask
+#   IdentityFile ~/.ssh/id_rsa
+#   IdentityFile ~/.ssh/id_dsa
+#   IdentityFile ~/.ssh/id_ecdsa
+#   IdentityFile ~/.ssh/id_ed25519
+#   Port 22
+#   Ciphers aes128-ctr,aes192-ctr,aes256-ctr,aes128-cbc,3des-cbc
+#   MACs hmac-md5,hmac-sha1,umac-64@openssh.com
+#   EscapeChar ~
+#   Tunnel no
+#   TunnelDevice any:any
+#   PermitLocalCommand no
+#   VisualHostKey no
+#   ProxyCommand ssh -q -W %h:%p gateway.example.com
+#   RekeyLimit 1G 1h
+#   UserKnownHostsFile ~/.ssh/known_hosts.d/%k
+    SendEnv LANG LC_*
+    HashKnownHosts yes
+    GSSAPIAuthentication yes
+```
+
+Si je veux par exemple ne plus authorisé les connexions avec mots de passe (c-a-d où on demande le mots de passe à l'utilisateur lors de la connexion)
+
+```terminaloutput
+#   PasswordAuthentication yes
+```
+```terminaloutput
+    PasswordAuthentication no
+```
+
+De cette manière on ne pourra plus que se connecter avec une paire de clé connue du serveur.
+
+!!! Si vous n'avez pas déposer votre clé publique dans le dossier approprié vous ne saurez plus vous conecter en ssh !!!
+
+Gestion des clés
+```shell
+ssh-keygen
+```
+
+Ici il va nous demander où on enregistre les clés (par défaut il le fait dans ~/.ssh/id_rsa et ~/.ssh/id_rsa.pub)
+
+Ensuite il demande une passephrase (mots de passe pour utiliser la clé)
+
+Dans les bonnes pratiques il est conseillés de faire une rotation de clés (changer de clés ssh) tous les ~6mois
+
+!!! Attention lors d'une rotation conserver vos anciennes clés privées/publique le temps de changer celles-ci sur les serveur !!!
+
+Cette commande génère deux clés : 
+- id_rsa => clé privée (à conserver sur votre machine et à ne jamais partager!)
+- id_rsa.pub => clé publique (à déposer sur les seveurs)
+
+#### S'authentifier avec une paires de clés
+
+il faudra déposer votre clé publique sur le serveur dans le fichier ~/.ssh/authorized_keys, ce fichier peux contenir plusieurs clés publique
+celles-ci doivent juste être collées l'une après l'autres et terminées par un retour à la ligne (sauf la dernière)
+
+Une fois qu'on a copier sa clé on pourra se connecter sans mots de passe.
+
+passer les authorized key avec la bonne permission
+```shell
+chmod 600 .ssh/authorized_keys
+```
+
+#### Se connecter
+
+Via une address ip
+```shell
+ssh username@xxx.xxx.xxx.xxx
+```
+via un nom de domaine : 
+```shell
+ssh username@devopsbf.be
+```
+Vous pouvez créer des noms de domaines custom dans le fichier hosts (/etc/hosts, C:\Windows\System32\driver\etc\hosts)
+
+Pour ce faire il faut juste rajouter une ligne 
+
+```terminaloutput
+ADDRESS_IP      nom.de.domaine
+```
+
+Donc ici la connection sera : 
+```shell
+ssh username@nom.de.domaine
+```
 
 ## AppArmor/SELinux

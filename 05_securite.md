@@ -156,6 +156,11 @@ Sudo (super user do) va me permettre d'exectuer une commande en tant qu'un autre
 sudo cat /var/log/syslog 
 ```
 
+Si le fichier /var/log/syslog n'est pas présent il faut installer rsyslog :
+```shell
+sudo apt install rsyslog
+```
+
 Par défaut on doit rajouter les utilisateurs au groupe sudo pour pouvoir utiliser sudo (sauf si on configure le sudoers)
 
 En général on garde le groupe sudo pour les administrateur system
@@ -170,10 +175,12 @@ Préserver les variables d'environment (intéressent dans certains cas particuli
 sudo -E cat /var/log/syslog
 ```
 
-Passer en tant qu'admin
+Passer en tant qu'admin (root)
 ```shell
 sudo su -
 ```
+
+#### Gestion des droits dans le sudoers
 
 ```terminaloutput
 root    ALL=(ALL:ALL)   ALL
@@ -508,6 +515,25 @@ Si je veux par exemple ne plus authorisé les connexions avec mots de passe (c-a
     PasswordAuthentication no
 ```
 
+Autre paramètre intéressent : 
+```terminaloutput
+Host *
+```
+Ici je vais pouvoir filtrer les hosts qui peuvent se connecter à cette machine
+```terminaloutput
+Host 10.3.?.?
+```
+ou
+```terminaloutput
+Host dev.test.local
+```
+ou 
+```terminaloutput
+Host dev
+    HostName dev.local
+    User bob
+```
+
 De cette manière on ne pourra plus que se connecter avec une paire de clé connue du serveur.
 
 !!! Si vous n'avez pas déposer votre clé publique dans le dossier approprié vous ne saurez plus vous conecter en ssh !!!
@@ -529,6 +555,11 @@ Cette commande génère deux clés :
 - id_rsa => clé privée (à conserver sur votre machine et à ne jamais partager!)
 - id_rsa.pub => clé publique (à déposer sur les seveurs)
 
+Exemple de clé publique
+```terminaloutput
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC/+wKYF7tVz+PygV9c7vMe8ctLHY423V+r/GOTNzGPz8gGSRgLbJQdJpkzPEiVlF3+yePuSW70I1cPblkQqLvoktKXgsHhjCCs1aFH5TEEsyTKuIOpN0Aa87META/oUS4fIXie95rLM7kI9Ducyx+gRc+4KtyuBktYjDRTNFPVyc0vgvxGJM1jWa9bqESeBQ9rwnLfidF3JmSMB1a7lM0zberWmThgPS087BEmm3Nxi73lp8C6F3d8wL4GtMqU9lkEwCjLNFqURGA6BRqoipBWSyuWRXY8x8mTrMwp00R0YFTu0y6+ATgxPyOjOWP7BGp/a7Ioo9iMls+rL1G8+z0Gpvg068Q4Llpna7P+fAZegn/Sox0eQaeTFQKCUCY5zEIYTWFdFAfbd/r+zljvT9SIw4l+ohYov7QmwLKPAyTts4jyKEehhJYWRFy8ZwbXitJHtn7B3ZXflXEIzR3oRMNm0r75DJ1+ELfLf4MpSA7JDxjzEg7eC9IluHSr7pCcZkk= debian@balrog-c2-srv
+```
+
 #### S'authentifier avec une paires de clés
 
 il faudra déposer votre clé publique sur le serveur dans le fichier ~/.ssh/authorized_keys, ce fichier peux contenir plusieurs clés publique
@@ -541,12 +572,23 @@ passer les authorized key avec la bonne permission
 chmod 600 .ssh/authorized_keys
 ```
 
+On peut aussi copier automatiquement sa clé via la commande : 
+```shell
+ssh-copy-id username@server
+```
+
 #### Se connecter
 
 Via une address ip
 ```shell
 ssh username@xxx.xxx.xxx.xxx
 ```
+
+Récupérer une l'adresse IP (privée) du serveur :
+```shell
+ip addr
+```
+
 via un nom de domaine : 
 ```shell
 ssh username@devopsbf.be
@@ -559,9 +601,21 @@ Pour ce faire il faut juste rajouter une ligne
 ADDRESS_IP      nom.de.domaine
 ```
 
+!!! Le fichier hosts a priorité sur le DNS, donc si vous mettez :
+```terminaloutput
+127.0.0.1      www.google.com
+```
+à chaque fois que vous tenterez de vous connecter à google, vous serez rediriger vers votre propre machine.
+Donc faites bien attention aux noms de domaines que vous entrez pour les machines (serveurs) concerné.
+
+Exemple :
+```terminaloutput
+ADDRESS_IP      bf.devops25
+```
+
 Donc ici la connection sera : 
 ```shell
-ssh username@nom.de.domaine
+ssh username@bf.devops25
 ```
 
 ## AppArmor/SELinux

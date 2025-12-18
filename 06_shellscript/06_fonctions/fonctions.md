@@ -58,3 +58,12 @@ hello_fct() {
 hello_fct "Philippe"
 hello_fct "Bob"
 ```
+
+#### Importer des fonctions d'un autre script 
+
+```shell
+#!/bin/bash
+
+# Importera les fonctions du script fonctions.sh
+source ./fonctions.sh
+```
